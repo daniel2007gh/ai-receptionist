@@ -2,23 +2,27 @@ const express = require("express");
 const WebSocket = require("ws");
 
 const app = express();
-app.use(express.json());
+
+/* IMPORTANT: Twilio needs URL-encoded, not JSON */
+app.use(express.urlencoded({ extended: true }));
 
 app.post("/voice", (req, res) => {
-  res.set("Content-Type", "text/xml");
+  res.type("text/xml");
 
-  res.send(`
-    <Response>
-      <Say>Connecting you now.</Say>
-      <Connect>
-        <Stream url="wss://ai-receptionist.onrender.com" />
-      </Connect>
-    </Response>
-  `);
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say>Connecting you now.</Say>
+  <Connect>
+    <Stream url="wss://ai-receptionist-production-5fe7.up.railway.app" />
+  </Connect>
+</Response>`);
 });
 
-const server = app.listen(10000, () => console.log("Running"));
+const server = app.listen(10000, () => {
+  console.log("Running on port 10000");
+});
 
+/* WebSocket server */
 const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (ws) => {
