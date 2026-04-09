@@ -1,6 +1,7 @@
 const express = require("express");
-const app = express();
+const WebSocket = require("ws");
 
+const app = express();
 app.use(express.json());
 
 app.post("/voice", (req, res) => {
@@ -8,15 +9,27 @@ app.post("/voice", (req, res) => {
 
   res.send(`
     <Response>
-      <Say voice="Polly.Amy">
-        Hello. Your AI receptionist is now active.
-      </Say>
+      <Connect>
+        <Stream url="wss://ai-receptionist.onrender.com/stream" />
+      </Connect>
     </Response>
   `);
 });
 
-app.get("/", (req, res) => {
-  res.send("Server is running");
-});
+const server = app.listen(10000, () => console.log("Running"));
 
-app.listen(10000, () => console.log("Running on port 10000"));
+const wss = new WebSocket.Server({ server, path: "/stream" });
+
+wss.on("connection", (ws) => {
+  console.log("Twilio connected");
+
+  ws.on("message", (msg) => {
+    const data = JSON.parse(msg);
+
+    if (data.event === "media") {
+      console.log("Receiving audio...");
+    }
+  });
+
+  ws.on("close", () => console.log("Call ended"));
+});
