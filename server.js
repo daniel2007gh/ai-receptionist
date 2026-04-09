@@ -9,6 +9,7 @@ app.post("/voice", (req, res) => {
 
   res.send(`
     <Response>
+      <Say>Connecting you to the AI assistant.</Say>
       <Connect>
         <Stream url="wss://ai-receptionist.onrender.com/stream" />
       </Connect>
@@ -18,16 +19,20 @@ app.post("/voice", (req, res) => {
 
 const server = app.listen(10000, () => console.log("Running"));
 
-const wss = new WebSocket.Server({ server, path: "/stream" });
+const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (ws) => {
   console.log("Twilio connected");
 
   ws.on("message", (msg) => {
-    const data = JSON.parse(msg);
+    try {
+      const data = JSON.parse(msg);
 
-    if (data.event === "media") {
-      console.log("Receiving audio...");
+      if (data.event === "media") {
+        console.log("Receiving audio...");
+      }
+    } catch (err) {
+      console.log("Error parsing message");
     }
   });
 
